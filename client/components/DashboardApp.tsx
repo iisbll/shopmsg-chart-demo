@@ -41,14 +41,13 @@ export default class DashboardApp extends React.Component {
           this.setState({ optins: data });
         });
       axios.get(`/api/reports/recipients.json?from=${START}&to=${END}`)
-      .then(({ data }) => {
-        this.setState({ recipients: data });
-      });
+        .then(({ data }) => {
+          this.setState({ recipients: data });
+        });
     }
   }
 
   onCollapse = (collapsed) => {
-    console.log(collapsed);
     this.setState({ collapsed });
   }
 
@@ -69,17 +68,51 @@ export default class DashboardApp extends React.Component {
       showRecipients
     } = this.state;
 
-    const HEAD: any = [{ type: 'string', label: 'Day' }];
-    if (showOptins) HEAD.push('opt-ins');
-    if (showRecipients) HEAD.push('recipients');
+    const FIELDS = [
+    {
+      label: 'Date Range:',
+      component: (
+        <RangePicker
+          className="col-18"
+          onChange={this.onDateChange}
+          value={dateRange}
+        />
+      )
+    },
+    {
+      label: 'Show Optins:',
+      component: (
+        <Switch
+          checked={showOptins}
+          onChange={(val) => this.onToggle('showOptins', val)}
+          size="small"
+        />
+      )
+    },
+    {
+      label: 'Show Recipients:',
+      component: (
+        <Switch
+          checked={showRecipients}
+          onChange={(val) => this.onToggle('showRecipients', val)}
+          size="small"
+        />
+      )
+    }
+  ];
+
+    const HEAD: any[] = [{ type: 'string', label: 'Day' }];
+    showOptins && HEAD.push('opt-ins');
+    showRecipients && HEAD.push('recipients');
     
-    const DATA: any = [HEAD];
+    const DATA: any[] = [HEAD];
     optins.forEach((item:any, i:number) => {
       const RECIPIENT: any = recipients[i];
-      if(!_.isUndefined(RECIPIENT)) {
+
+      if (!_.isUndefined(RECIPIENT)) {
         const CURRENT = [item.date];
-        if (showOptins) CURRENT.push(item.count);
-        if (showRecipients) CURRENT.push(RECIPIENT.count);
+        showOptins && CURRENT.push(item.count);
+        showRecipients && CURRENT.push(RECIPIENT.count);
         DATA.push(CURRENT);
       }
     });
@@ -132,54 +165,24 @@ export default class DashboardApp extends React.Component {
               <Breadcrumb.Item>Message Receipts & Optins</Breadcrumb.Item>
             </Breadcrumb>
             <Card>
-              <Row 
-                type="flex"
-                gutter={16}
-                style={{alignItems: 'center', padding: '10px 0'}}
-              >
-                <Col span={6} style={{ textAlign: 'right' }}>
-                  Date Range:
-                </Col>
-                <Col span={18}>
-                  <RangePicker
-                    className="col-18"
-                    onChange={this.onDateChange}
-                    value={dateRange}
-                  />
-                </Col>
-              </Row>
-              <Row 
-                type="flex"
-                gutter={16}
-                style={{alignItems: 'center', padding: '10px 0'}}
-              >
-                <Col span={6} style={{ textAlign: 'right' }}>
-                  Show Optins:
-                </Col>
-                <Col span={18}>
-                  <Switch
-                    checked={showOptins}
-                    onChange={(val) => this.onToggle('showOptins', val)}
-                    size="small"
-                  />
-                </Col>
-              </Row>
-              <Row 
-                type="flex"
-                gutter={16}
-                style={{alignItems: 'center', padding: '10px 0'}}
-              >
-                <Col span={6} style={{ textAlign: 'right' }}>
-                  Show Recipients:
-                </Col>
-                <Col span={18}>
-                  <Switch
-                    checked={showRecipients}
-                    onChange={(val) => this.onToggle('showRecipients', val)}
-                    size="small"
-                  />
-                </Col>
-              </Row>
+              {
+                FIELDS.map((field, i) => (
+                  <Row 
+                    gutter={16}
+                    key={`row-${i}`}
+                    style={{alignItems: 'center', padding: '10px 0'}}
+                    type="flex"
+                  >
+                    <Col span={6} style={{ textAlign: 'right' }}>
+                      {field.label}
+                    </Col>
+                    <Col span={18}>
+                      {field.component}
+                    </Col>
+                  </Row>
+                ))
+              }
+              
             </Card>
             {
               (DATA.length > 1 && (showOptins || showRecipients)) && (
