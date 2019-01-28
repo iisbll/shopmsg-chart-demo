@@ -1,22 +1,72 @@
 "use strict";
 import * as React from 'react';
-import { Layout, Menu, Breadcrumb, Icon, Card } from 'antd';
+import { 
+  Breadcrumb,
+  Card,
+  Col,
+  DatePicker,
+  Icon,
+  Layout,
+  Menu,
+  Row,
+  Switch
+} from 'antd';
+import moment from 'moment';
+import axios from 'axios';
+import _ from 'underscore';
 
 const { Header, Content, Footer, Sider } = Layout;
 const SubMenu = Menu.SubMenu;
+const { RangePicker } = DatePicker;
 
 require('antd/dist/antd.less');
 export default class DashboardApp extends React.Component {
   state = {
     collapsed: false,
+    dateRange: [],
+    optins: [],
+    recipients: [],
+    showOptins: true,
+    showRecipients: true
   };
+
+  componentDidUpdate(prevProps, prevState) {
+    if (!_.isEqual(this.state.dateRange, prevState.dateRange)) {
+      const { dateRange } = this.state;
+      const START = moment(dateRange[0]).format('YYYY-MM-DD');
+      const END = moment(dateRange[1]).format('YYYY-MM-DD');
+      axios.get(`/api/reports/optins.json?from=${START}&to=${END}`)
+        .then(({ data }) => {
+          this.setState({ optins: data });
+        });
+      axios.get(`/api/reports/recipients.json?from=${START}&to=${END}`)
+      .then(({ data }) => {
+        this.setState({ recipients: data });
+      });
+    }
+  }
 
   onCollapse = (collapsed) => {
     console.log(collapsed);
     this.setState({ collapsed });
   }
 
-  render() {
+  onDateChange = (value) => {
+    this.setState({ dateRange: value });
+  }
+
+  onToggle = (field, value) => {
+    this.setState({ [field]: value })
+  }
+
+  render() {   
+    const {
+      dateRange,
+      optins,
+      recipients,
+      showOptins,
+      showRecipients
+    } = this.state;
     return (
       <Layout style={{ minHeight: '100vh' }}>
         <Sider
@@ -56,13 +106,64 @@ export default class DashboardApp extends React.Component {
           </Menu>
         </Sider>
         <Layout>
-          <Header style={{ background: '#fff', padding: 0 }} />
+         <Header style={{ background: '#fff', padding: '0 16px', fontSize: '24px', fontWeight: 500}}>
+            Reports
+          </Header>
           <Content style={{ margin: '0 16px' }}>
             <Breadcrumb style={{ margin: '16px 0' }}>
               <Breadcrumb.Item>Reports</Breadcrumb.Item>
               <Breadcrumb.Item>Message Receipts & Optins</Breadcrumb.Item>
             </Breadcrumb>
-            <Card>Put your component here</Card>
+            <Card>
+              <Row 
+                type="flex"
+                gutter={16}
+                style={{alignItems: 'center', padding: '10px 0'}}
+              >
+                <Col span={6} style={{ textAlign: 'right' }}>
+                  Date Range:
+                </Col>
+                <Col span={18}>
+                  <RangePicker
+                    className="col-18"
+                    onChange={this.onDateChange}
+                    value={dateRange}
+                  />
+                </Col>
+              </Row>
+              <Row 
+                type="flex"
+                gutter={16}
+                style={{alignItems: 'center', padding: '10px 0'}}
+              >
+                <Col span={6} style={{ textAlign: 'right' }}>
+                  Show Optins:
+                </Col>
+                <Col span={18}>
+                  <Switch
+                    checked={showOptins}
+                    onChange={(val) => this.onToggle('showOptins', val)}
+                    size="small"
+                  />
+                </Col>
+              </Row>
+              <Row 
+                type="flex"
+                gutter={16}
+                style={{alignItems: 'center', padding: '10px 0'}}
+              >
+                <Col span={6} style={{ textAlign: 'right' }}>
+                  Show Recipients:
+                </Col>
+                <Col span={18}>
+                  <Switch
+                    checked={showRecipients}
+                    onChange={(val) => this.onToggle('showRecipients', val)}
+                    size="small"
+                  />
+                </Col>
+              </Row>
+            </Card>
           </Content>
           <Footer style={{ textAlign: 'center' }}>ShopMessage ©2018</Footer>
         </Layout>
