@@ -11,6 +11,7 @@ import {
   Row,
   Switch
 } from 'antd';
+import { Chart } from 'react-google-charts';
 import moment from 'moment';
 import axios from 'axios';
 import _ from 'underscore';
@@ -67,6 +68,22 @@ export default class DashboardApp extends React.Component {
       showOptins,
       showRecipients
     } = this.state;
+
+    const HEAD: any = [{ type: 'string', label: 'Day' }];
+    if (showOptins) HEAD.push('opt-ins');
+    if (showRecipients) HEAD.push('recipients');
+    
+    const DATA: any = [HEAD];
+    optins.forEach((item:any, i:number) => {
+      const RECIPIENT: any = recipients[i];
+      if(!_.isUndefined(RECIPIENT)) {
+        const CURRENT = [item.date];
+        if (showOptins) CURRENT.push(item.count);
+        if (showRecipients) CURRENT.push(RECIPIENT.count);
+        DATA.push(CURRENT);
+      }
+    });
+
     return (
       <Layout style={{ minHeight: '100vh' }}>
         <Sider
@@ -164,6 +181,26 @@ export default class DashboardApp extends React.Component {
                 </Col>
               </Row>
             </Card>
+            {
+              (DATA.length > 1 && (showOptins || showRecipients)) && (
+                <Card style={{ margin: '10px 0px' }}>
+                  <Chart 
+                    width={'100%'}
+                    height={'400px'}
+                    chartType="Line"
+                    loader={<div>Loading Chart</div>}
+                    data={DATA}
+                  />
+                </Card>
+              )
+            }
+            {
+              (!_.isEmpty(dateRange) && _.isEmpty(optins)) && (
+                <Card style={{ margin: '10px 0px' }}>
+                  No results to display.
+                </Card>
+              )
+            }
           </Content>
           <Footer style={{ textAlign: 'center' }}>ShopMessage ©2018</Footer>
         </Layout>
