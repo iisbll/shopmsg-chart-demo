@@ -205,7 +205,7 @@ export default class DashboardApp extends React.Component {
               )
             }
           </Content>
-          <Footer style={{ textAlign: 'center' }}>ShopMessage ©2018</Footer>
+          <Footer style={{ textAlign: 'center' }}>ShopMessage ©2019</Footer>
         </Layout>
       </Layout>
     );
